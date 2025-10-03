@@ -24,6 +24,7 @@ import { AdminNav } from "../partials/admin-nav";
 import { getAllCourses } from "./courses.api";
 import { useAxios } from "@/services/axios/axios.hooks";
 import { useCourses } from "./courses.provider";
+import Link from "next/link";
 
 // ✅ Zod schema for form
 const courseSchema = z.object({
@@ -204,13 +205,12 @@ export default function CoursesPage() {
                   >
                     Edit
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <Link
+                    href={`/admin/courses/${course.id}`}
                     className="flex-1 bg-transparent"
                   >
                     View Details
-                  </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
