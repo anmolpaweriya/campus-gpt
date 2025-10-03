@@ -1,6 +1,9 @@
 "use client";
 
-import type React from "react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { mockCourses } from "@/lib/mock-data";
 import { Search, Clock, MapPin, BookOpen, Award, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,62 +20,58 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { AdminNav } from "../partials/admin-nav";
 import { getAllCourses } from "./courses.api";
 import { useAxios } from "@/services/axios/axios.hooks";
+import { useCourses } from "./courses.provider";
+
+// ✅ Zod schema for form
+const courseSchema = z.object({
+  name: z.string().min(3, "Course name is required"),
+  code: z.string().min(2, "Course code is required"),
+});
+
+type CourseFormValues = z.infer<typeof courseSchema>;
 
 export default function CoursesPage() {
-  const { axios } = useAxios();
   const [searchQuery, setSearchQuery] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [courses, setCourses] = useState<any[]>([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    code: "",
-    faculty: "",
-    schedule: "",
-    room: "",
-    credits: "",
-  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const filteredCourses = mockCourses.filter(
-    (course) =>
-      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.faculty.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const { courses, refetchCourses, createnewCourse } = useCourses();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("New course:", formData);
-    // In a real app, this would save to database
-    setIsDialogOpen(false);
-    setFormData({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CourseFormValues>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: {
       name: "",
       code: "",
-      faculty: "",
-      schedule: "",
-      room: "",
-      credits: "",
-    });
+    },
+  });
+
+  const filteredCourses = courses.filter(
+    (course) =>
+      course.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.code.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const onSubmit = async (data: CourseFormValues) => {
+    setIsSubmitting(true);
+    try {
+      await createnewCourse(data);
+      reset();
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Submit error:", error);
+    } finally {
+      setIsSubmitting(false);
+      refetchCourses();
+    }
   };
-
-  async function fetchAllCourses() {
-    const data = await getAllCourses(axios);
-    setCourses(data);
-  }
-  useEffect(() => {
-    fetchAllCourses();
-  }, []);
-
-  console.log("anisole", courses);
 
   return (
     <div className="min-h-screen bg-background">
@@ -98,6 +96,8 @@ export default function CoursesPage() {
                 />
               </div>
               <Button variant="outline">Filter</Button>
+
+              {/* Add Course Dialog */}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-2">
@@ -111,35 +111,42 @@ export default function CoursesPage() {
                       Add New Course
                     </DialogTitle>
                     <DialogDescription>
-                      Enter the details of the new course
+                      Enter the course name and code
                     </DialogDescription>
                   </DialogHeader>
-                  <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+
+                  {/* Form */}
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-4 mt-4"
+                  >
                     <div className="space-y-2">
                       <Label htmlFor="name">Course Name</Label>
                       <Input
                         id="name"
                         placeholder="Data Structures and Algorithms"
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                        required
+                        {...register("name")}
                         className="bg-secondary/50"
                       />
+                      {errors.name && (
+                        <p className="text-sm text-red-500">
+                          {errors.name.message}
+                        </p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="code">Course Code</Label>
                       <Input
                         id="code"
                         placeholder="CS201"
-                        value={formData.code}
-                        onChange={(e) =>
-                          setFormData({ ...formData, code: e.target.value })
-                        }
-                        required
+                        {...register("code")}
                         className="bg-secondary/50"
                       />
+                      {errors.code && (
+                        <p className="text-sm text-red-500">
+                          {errors.code.message}
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-3 pt-4">
@@ -151,8 +158,12 @@ export default function CoursesPage() {
                       >
                         Cancel
                       </Button>
-                      <Button type="submit" className="flex-1">
-                        Add Course
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? "Submitting..." : "Add Course"}
                       </Button>
                     </div>
                   </form>
@@ -179,35 +190,12 @@ export default function CoursesPage() {
                       >
                         {course.code}
                       </Badge>
-                      <Badge
-                        variant="outline"
-                        className="bg-primary/10 text-primary border-primary/20"
-                      >
-                        <Award className="w-3 h-3 mr-1" />
-                        {course.credits} Credits
-                      </Badge>
                     </div>
                     <CardTitle className="text-lg">{course.name}</CardTitle>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <BookOpen className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-foreground">{course.faculty}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {course.schedule}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{course.room}</span>
-                  </div>
-                </div>
                 <div className="pt-3 border-t border-border/50 flex gap-2">
                   <Button
                     variant="outline"
@@ -230,7 +218,7 @@ export default function CoursesPage() {
         </div>
 
         {filteredCourses.length === 0 && (
-          <Card className="border-border/50">
+          <Card className="border-border/50 mt-6">
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">
                 No courses found matching your search.
