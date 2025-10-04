@@ -24,6 +24,7 @@ import { StudentNav } from "./partials/student-nav";
 import { useSupabaseContext } from "@/providers/supabse.provider";
 import { useEffect, useState } from "react";
 import { useAxios } from "@/services/axios/axios.hooks";
+import { useDashboard } from "./dashboard.provider";
 
 type Lecture = {
   startTime: string;
@@ -39,32 +40,11 @@ type Lecture = {
 
 export default function StudentDashboard() {
   const { user, isLoading: isUserLoading } = useSupabaseContext();
-  const { axios } = useAxios();
-  const [dashboardData, setDashboardData] = useState<{
-    subjectsCount: number;
-    totalTodayLectures: number;
-    totalWeekLectures: number;
-    todayLectures: Lecture[];
-  } | null>(null);
+  const { dashboardData, isLoadingCourses, refetchCourses } = useDashboard();
 
-  const [loadingDashboard, setLoadingDashboard] = useState(true);
+  if (isLoadingCourses) return <>Loading...</>;
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const res = await axios.get("/dashboard/student"); // Replace with your real API path
-        setDashboardData(res.data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data", error);
-      } finally {
-        setLoadingDashboard(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
-
-  if (isUserLoading || loadingDashboard) return <>Loading...</>;
+  if (isUserLoading) return <>Loading...</>;
 
   return (
     <div className="min-h-screen bg-background">
@@ -182,7 +162,7 @@ export default function StudentDashboard() {
                   You have no lectures today — enjoy the day!
                 </div>
               ) : (
-                dashboardData?.todayLectures.map((slot, index) => (
+                dashboardData?.todayLectures.map((slot: any, index: any) => (
                   <div
                     key={index}
                     className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all duration-300 group"
