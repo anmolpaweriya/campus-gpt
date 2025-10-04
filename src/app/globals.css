@@ -227,3 +227,8 @@
         }
     }
 }
+
+/* For WebKit browsers like Chrome, Safari */
+::-webkit-scrollbar {
+    width: 2px;
+}

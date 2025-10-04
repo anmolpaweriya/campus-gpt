@@ -5,6 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
 import { StudentNav } from "../../dashboard/partials/student-nav";
@@ -114,7 +115,7 @@ export default function ChatbotPage() {
                     )}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {message.content}
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
                       {message.isStreaming && (
                         <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />
                       )}

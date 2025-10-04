@@ -12,14 +12,18 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { StudentNav } from "../dashboard/partials/student-nav";
+import { getCourseTimeTable } from "./timetable.api";
+import { useAxios } from "@/services/axios/axios.hooks";
+import { useEffect, useState } from "react";
 
 const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 export default function TimetablePage() {
-  const getClassesForDay = (day: string) => {
-    return mockTimetable.filter((slot) => slot.day === day);
-  };
-
+  const { axios } = useAxios();
+  const [timetable, setTimetable] = useState<any[]>([]);
+  const todayIndex = new Date().getDay();
+  const todayName = todayIndex === 0 ? "Sunday" : days[todayIndex - 1];
+  console.log("anisole", todayIndex, todayName);
   const getTypeColor = (type: string) => {
     switch (type) {
       case "lecture":
@@ -33,6 +37,14 @@ export default function TimetablePage() {
     }
   };
 
+  async function fetchCourseTimeTable() {
+    const data = await getCourseTimeTable(axios);
+    setTimetable(data);
+  }
+
+  useEffect(() => {
+    fetchCourseTimeTable();
+  }, []);
   return (
     <div className="min-h-screen bg-background">
       <StudentNav />
@@ -46,9 +58,8 @@ export default function TimetablePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {days.map((day) => {
-            const classes = getClassesForDay(day);
-            const isToday = day === "Monday"; // Mock today as Monday
-
+            const classes = timetable[day as any];
+            const isToday = day == todayName;
             return (
               <Card
                 key={day}
@@ -66,10 +77,12 @@ export default function TimetablePage() {
                       </Badge>
                     )}
                   </CardTitle>
-                  <CardDescription>{classes.length} classes</CardDescription>
+                  <CardDescription>
+                    {classes?.length ?? 0} classes
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {classes.length === 0 ? (
+                <CardContent className="space-y-3 overflow-y-scroll max-h-[300px]">
+                  {!classes?.length ? (
                     <div className="text-center py-8 text-muted-foreground text-sm">
                       No classes scheduled
                     </div>
@@ -81,22 +94,24 @@ export default function TimetablePage() {
                       >
                         <div className="flex items-start justify-between gap-2">
                           <h4 className="font-semibold text-sm leading-tight text-foreground">
-                            {slot.subject}
+                            {slot?.subject?.name}
                           </h4>
                           <Badge
                             variant="outline"
                             className={cn(
                               "text-xs flex-shrink-0",
-                              getTypeColor(slot.type),
+                              getTypeColor(slot?.course?.code),
                             )}
                           >
-                            {slot.type}
+                            {slot?.course?.code}
                           </Badge>
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <Clock className="w-3 h-3" />
-                            <span>{slot.time}</span>
+                            <span>
+                              {slot.startTime} - {slot.endTime}
+                            </span>
                           </div>
                           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <MapPin className="w-3 h-3" />
@@ -104,7 +119,7 @@ export default function TimetablePage() {
                           </div>
                         </div>
                         <p className="text-xs text-muted-foreground pt-1 border-t border-border/50">
-                          {slot.faculty}
+                          {slot.faculty?.name}
                         </p>
                       </div>
                     ))
