@@ -12,12 +12,14 @@ export default function Layout({ children }: { children: ReactNode }) {
   const { axios } = useAxios();
   useEffect(() => {
     if (isLoading) return;
+
     if (!user) {
       router.replace("/auth/login");
+      return;
     } else if (user?.user_metadata?.role == UserRoles.ADMIN) {
       router.replace("/admin");
+      return;
     }
-
     async function checkCourseJoined() {
       try {
         const res = await axios.get("/education/course/joined");

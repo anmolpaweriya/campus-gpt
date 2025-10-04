@@ -128,6 +128,19 @@ export default function ChatbotPage() {
                   )}
                 </div>
               ))}
+              {isFetchingResponse && (
+                <div className="flex gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 justify-start">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center glow-primary">
+                    <Bot className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="max-w-[80%] rounded-2xl px-5 py-4 bg-secondary/50 text-foreground border-2 border-border/50 hover:border-primary/30 transition-all duration-300">
+                    <p className="text-sm leading-relaxed flex items-center gap-2">
+                      <Loader2 className="animate-spin w-4 h-4 text-muted-foreground" />
+                      Thinking...
+                    </p>
+                  </div>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           )}
