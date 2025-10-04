@@ -87,7 +87,7 @@ export default function TimetablePage() {
                       No classes scheduled
                     </div>
                   ) : (
-                    classes.map((slot, index) => (
+                    classes.map((slot: any, index: number) => (
                       <div
                         key={index}
                         className="p-3 rounded-lg bg-secondary/50 border border-border/50 space-y-2"
