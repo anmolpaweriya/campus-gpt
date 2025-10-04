@@ -21,11 +21,23 @@ export async function startNewChatRoom(axios: AxiosInstance) {
   const res = await axios.post("/chat/new-chat");
   return res?.data?.data;
 }
-
 export async function sendMessage(
   axios: AxiosInstance,
-  data: { chatId: string; message: string },
+  data: { chatId: string; message: string; file?: File },
 ): Promise<any> {
-  const res = await axios.post("/chat/message", data);
+  const formData = new FormData();
+  formData.append("chatId", data.chatId);
+  formData.append("message", data.message);
+
+  if (data.file) {
+    formData.append("file", data.file); // backend must expect 'file' field
+  }
+
+  const res = await axios.post("/chat/message", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
   return res?.data?.data;
 }

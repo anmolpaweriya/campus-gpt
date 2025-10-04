@@ -4,7 +4,7 @@ import type React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, Bot, User, Sparkles, Loader2 } from "lucide-react";
+import { Send, Bot, User, Sparkles, Loader2, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,8 @@ export default function ChatbotPage() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+
   const {
     messages,
     isLoadingMessages,
@@ -73,8 +75,8 @@ export default function ChatbotPage() {
         isStreaming: false,
       },
     ]);
-    const aiResponse = await handleSendMessage(userMessage);
-
+    const aiResponse = await handleSendMessage(userMessage, file ?? undefined);
+    setFile(null);
     await simulateStreamingResponse(aiResponse.content);
     setIsLoading(false);
   };
@@ -149,7 +151,27 @@ export default function ChatbotPage() {
         {/* Input area */}
         <div className="border-t-2 border-primary/20 p-4 bg-card/80 backdrop-blur-sm fixed bottom-0 w-full">
           <div className="max-w-4xl mx-auto w-full">
-            <form onSubmit={handleSubmit} className="flex gap-3">
+            <form onSubmit={handleSubmit} className="flex gap-3 items-center">
+              {/* File Input (hidden) */}
+              <input
+                type="file"
+                id="file-upload"
+                accept=".pdf"
+                disabled={isLoading || isFetchingResponse}
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                className="hidden"
+              />
+
+              {/* Label as Button */}
+              <label
+                htmlFor="file-upload"
+                className="cursor-pointer h-12 w-12 flex items-center justify-center rounded-md border border-border bg-secondary/50 hover:bg-secondary transition-all duration-300"
+                title={file ? file.name : "Attach a file"}
+              >
+                <Paperclip className="w-5 h-5 text-muted-foreground" />
+              </label>
+
+              {/* Text Input */}
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -157,6 +179,8 @@ export default function ChatbotPage() {
                 disabled={isLoading || isFetchingResponse}
                 className="flex-1 bg-secondary/50 border-border/50 focus:border-primary h-12 text-base transition-all duration-300"
               />
+
+              {/* Submit Button */}
               <Button
                 type="submit"
                 disabled={isLoading || !input.trim() || isFetchingResponse}
@@ -170,6 +194,13 @@ export default function ChatbotPage() {
                 )}
               </Button>
             </form>
+
+            {/* Optional: Show selected file name */}
+            {file && (
+              <div className="mt-2 text-sm text-muted-foreground truncate">
+                Attached: {file.name}
+              </div>
+            )}
           </div>
         </div>
       </main>

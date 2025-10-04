@@ -26,7 +26,7 @@ type ChatbotContextType = {
   rooms: any[];
   isLoadingRooms: boolean;
   handleNewChat: () => Promise<void>;
-  handleSendMessage: (message: string) => Promise<any>;
+  handleSendMessage: (message: string, file?: File) => Promise<any>;
   handleDeleteChat: (chatId: string) => Promise<void>;
   messages: any[];
   setMessages: Dispatch<SetStateAction<any[]>>;
@@ -74,10 +74,15 @@ export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
     toast("Room removed successfully");
   }
 
-  async function handleSendMessage(message: string) {
+  async function handleSendMessage(message: string, file?: File) {
     setIsFetchingResponse(true);
-    const data = await sendMessage(axios, { chatId: currentChatId, message });
+    const data = await sendMessage(axios, {
+      chatId: currentChatId,
+      message,
+      file,
+    });
     setIsFetchingResponse(false);
+
     return data;
   }
 
