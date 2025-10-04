@@ -2,7 +2,7 @@ import { AxiosInstance } from "axios";
 import { CourseForm } from "./page";
 
 export async function getAllSubjects(axios: AxiosInstance, courseId?: string) {
-  const res = await axios.get(`education/subjects`);
+  const res = await axios.get(`education/subjects?courseId=${courseId}`);
 
   return res?.data?.data ?? [];
 }

@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { createContext, useContext, useState, useEffect } from "react";
 import { createSubjects, getAllSubjects } from "./subject.api";
 import { CourseForm } from "./page";
+import { useParams } from "next/navigation";
 
 interface SubjectContextType {
   subjects: any[];
@@ -28,6 +29,9 @@ export const SubjectProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const params = useParams?.() as { courseId?: string } | undefined;
+  const courseIdFromParams = params?.courseId ?? undefined;
+
   const { axios } = useAxios();
   const {
     data: subjects = [],
@@ -36,7 +40,7 @@ export const SubjectProvider = ({
   } = useQuery({
     queryKey: ["subjects"],
     queryFn: async () => {
-      return await getAllSubjects(axios);
+      return await getAllSubjects(axios, courseIdFromParams);
     },
   });
 
