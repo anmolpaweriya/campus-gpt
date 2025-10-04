@@ -67,59 +67,6 @@ type Course = {
   timetables: TimetableSlot[]; // updated shape
 };
 
-const initialCoursesData: Course[] = [
-  {
-    id: 1,
-    name: "Database Management",
-    teacherName: "Dr. Sarah Johnson",
-    timetables: [
-      { day: "Monday", startTime: "09:00", endTime: "10:30", room: "201" },
-      { day: "Wednesday", startTime: "09:00", endTime: "10:30", room: "201" },
-      { day: "Friday", startTime: "14:00", endTime: "15:30", room: "Lab 3" },
-    ],
-  },
-  {
-    id: 2,
-    name: "Operating System",
-    teacherName: "Prof. Michael Chen",
-    timetables: [
-      { day: "Tuesday", startTime: "11:00", endTime: "12:30", room: "305" },
-      { day: "Thursday", startTime: "11:00", endTime: "12:30", room: "305" },
-      { day: "Friday", startTime: "09:00", endTime: "10:30", room: "Lab 2" },
-    ],
-  },
-  {
-    id: 3,
-    name: "Computer Networks",
-    teacherName: "Dr. Emily Rodriguez",
-    timetables: [
-      { day: "Monday", startTime: "14:00", endTime: "15:30", room: "402" },
-      { day: "Wednesday", startTime: "14:00", endTime: "15:30", room: "402" },
-      { day: "Thursday", startTime: "15:30", endTime: "17:00", room: "Lab 5" },
-    ],
-  },
-  {
-    id: 4,
-    name: "Java Programming",
-    teacherName: "Prof. David Kumar",
-    timetables: [
-      { day: "Tuesday", startTime: "09:00", endTime: "10:30", room: "103" },
-      { day: "Thursday", startTime: "09:00", endTime: "10:30", room: "103" },
-      { day: "Friday", startTime: "11:00", endTime: "12:30", room: "Lab 1" },
-    ],
-  },
-  {
-    id: 5,
-    name: "Software Engineering",
-    teacherName: "Dr. Lisa Anderson",
-    timetables: [
-      { day: "Monday", startTime: "11:00", endTime: "12:30", room: "204" },
-      { day: "Wednesday", startTime: "11:00", endTime: "12:30", room: "204" },
-      { day: "Tuesday", startTime: "14:00", endTime: "15:30", room: "204" },
-    ],
-  },
-];
-
 /* -----------------------
    Zod schema + RHF types
    ----------------------- */
@@ -168,7 +115,7 @@ export default function CoursesPage() {
   const params = useParams?.() as { courseId?: string } | undefined;
   const courseIdFromParams = params?.courseId ?? undefined;
 
-  const [courses, setCourses] = useState<Course[]>(initialCoursesData);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -176,7 +123,7 @@ export default function CoursesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [courseToDelete, setCourseToDelete] = useState<number | null>(null);
 
-  const { subjects, createSubject } = useSubjects();
+  const { subjects, createSubject, isLoadingCourses } = useSubjects();
 
   const { faculties } = useFaculty();
   /*
@@ -301,39 +248,6 @@ export default function CoursesPage() {
       teacherId: data.teacherId,
     };
 
-    // If editing existing (selectedCourse) update in local state; otherwise create new
-    // if (selectedCourse) {
-    //   setCourses((prev) =>
-    //     prev.map((c) =>
-    //       c.id === selectedCourse.id
-    //         ? {
-    //             ...c,
-    //             name: payload.name,
-    //             courseId: payload.courseId,
-    //             teacherId: payload.teacherId,
-    //             // keep teacherName from options
-    //             teacherName:
-    //               teacherOptions.find((t) => t.id === payload.teacherId)
-    //                 ?.name ?? c.teacherName,
-    //             timetables: payload.timetables,
-    //           }
-    //         : c,
-    //     ),
-    //   );
-    // } else {
-    //   const newCourse: Course = {
-    //     id: Math.max(...courses.map((c) => c.id), 0) + 1,
-    //     name: payload.name,
-    //     courseId: payload.courseId,
-    //     teacherId: payload.teacherId,
-    //     teacherName:
-    //       teacherOptions.find((t) => t.id === payload.teacherId)?.name ??
-    //       "Unknown",
-    //     timetables: payload.timetables,
-    //   };
-    //   setCourses((prev) => [...prev, newCourse]);
-    // }
-
     await createSubject(payload);
     setEditDialogOpen(false);
     reset(defaultValues);
@@ -379,64 +293,17 @@ export default function CoursesPage() {
             </Button>
           </div>
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {subjects.map((course) => (
-            <Card
-              key={course.id}
-              className="border-border/50 hover:border-chart-2/50 transition-all duration-300 cursor-pointer hover:shadow-lg group"
-              onClick={() => handleCardClick(course)}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge
-                        variant="outline"
-                        className="bg-chart-2/10 text-chart-2 border-chart-2/30 font-mono"
-                      >
-                        {course.name.split(" ").slice(0, 2).join(" ")}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-xl mb-3 text-balance group-hover:text-chart-2 transition-colors">
-                      {course.name}
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-foreground font-medium">
-                    {course.teacherName ?? "Unassigned"}
-                  </span>
-                </div>
-                <div className="mt-3 text-sm text-muted-foreground">
-                  {course.timetables.slice(0, 2).map((t: any, i: any) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <Clock className="w-4 h-4" />
-                      <span>
-                        {t.day} · {t.startTime}-{t.endTime} · {t.room}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
         {/* Summary Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="border-border/50 bg-gradient-to-br from-chart-2/10 to-chart-2/5">
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-chart-2/20 rounded-lg">
                   <BookOpen className="w-6 h-6 text-chart-2" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">
-                    {courses.length}
+                    {subjects?.length}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Total Subjects
@@ -447,17 +314,17 @@ export default function CoursesPage() {
           </Card>
 
           <Card className="border-border/50 bg-gradient-to-br from-chart-1/10 to-chart-1/5">
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-chart-1/20 rounded-lg">
                   <Clock className="w-6 h-6 text-chart-1" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">
-                    {courses.reduce(
+                    {subjects?.reduce(
                       (acc, course) => acc + course.timetables.length,
                       0,
-                    )}
+                    ) ?? 0}
                   </p>
                   <p className="text-sm text-muted-foreground">Weekly Slots</p>
                 </div>
@@ -466,14 +333,14 @@ export default function CoursesPage() {
           </Card>
 
           <Card className="border-border/50 bg-gradient-to-br from-chart-4/10 to-chart-4/5">
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-chart-4/20 rounded-lg">
                   <User className="w-6 h-6 text-chart-4" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-foreground">
-                    {new Set(courses.map((c) => c.teacherName)).size}
+                    {new Set(subjects?.map((c) => c.teacherId)).size}
                   </p>
                   <p className="text-sm text-muted-foreground">Instructors</p>
                 </div>
@@ -481,6 +348,58 @@ export default function CoursesPage() {
             </CardContent>
           </Card>
         </div>
+
+        {isLoadingCourses ? (
+          <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+            Loading ...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {subjects.map((course) => (
+              <Card
+                key={course.id}
+                className="border-border/50 hover:border-chart-2/50 transition-all duration-300 cursor-pointer hover:shadow-lg group"
+                onClick={() => handleCardClick(course)}
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge
+                          variant="outline"
+                          className="bg-chart-2/10 text-chart-2 border-chart-2/30 font-mono"
+                        >
+                          {course.name.split(" ").slice(0, 2).join(" ")}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-xl mb-3 text-balance group-hover:text-chart-2 transition-colors">
+                        {course.name}
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-foreground font-medium">
+                      {course?.teacher?.name ?? "Unassigned"}
+                    </span>
+                  </div>
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    {course.timetables.slice(0, 2).map((t: any, i: any) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <Clock className="w-4 h-4" />
+                        <span>
+                          {t.day} · {t.startTime}-{t.endTime} · {t.room}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* View Dialog */}

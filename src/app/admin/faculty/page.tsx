@@ -203,50 +203,56 @@ export default function FacultyPage() {
 
         {/* Faculty List */}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFaculty.map((faculty) => (
-            <Card
-              key={faculty.id}
-              className="border-border/50 hover:border-accent/50 transition-colors shadow-sm"
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg font-semibold mb-1">
-                      {faculty.name}
-                    </CardTitle>
-                    <CardDescription className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <UserCog className="w-4 h-4" />
-                      {faculty.designation}
-                    </CardDescription>
+        {isLoadingCourses ? (
+          <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+            Loading ...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredFaculty.map((faculty) => (
+              <Card
+                key={faculty.id}
+                className="border-border/50 hover:border-accent/50 transition-colors shadow-sm"
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-semibold mb-1">
+                        {faculty.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-2 text-muted-foreground text-sm">
+                        <UserCog className="w-4 h-4" />
+                        {faculty.designation}
+                      </CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="space-y-4">
-                {/* Contact Info */}
-                <div className="space-y-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2 justify-start bg-transparent text-foreground"
-                  >
-                    <Mail className="w-4 h-4" />
-                    <span className="truncate">{faculty.email}</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2 justify-start bg-transparent text-foreground"
-                  >
-                    <Phone className="w-4 h-4" />
-                    <span className="truncate">{faculty.phone}</span>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <CardContent className="space-y-4">
+                  {/* Contact Info */}
+                  <div className="space-y-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 justify-start bg-transparent text-foreground"
+                    >
+                      <Mail className="w-4 h-4" />
+                      <span className="truncate">{faculty.email}</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 justify-start bg-transparent text-foreground"
+                    >
+                      <Phone className="w-4 h-4" />
+                      <span className="truncate">{faculty.phone}</span>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* No Results */}
         {filteredFaculty.length === 0 && (

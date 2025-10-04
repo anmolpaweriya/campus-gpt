@@ -8,8 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { mockCourses } from "@/lib/mock-data";
-import { Search, Clock, MapPin, BookOpen, Award, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -21,8 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { AdminNav } from "../partials/admin-nav";
-import { getAllCourses } from "./courses.api";
-import { useAxios } from "@/services/axios/axios.hooks";
 import { useCourses } from "./courses.provider";
 import Link from "next/link";
 
@@ -39,7 +36,8 @@ export default function CoursesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { courses, refetchCourses, createnewCourse } = useCourses();
+  const { courses, refetchCourses, createnewCourse, isLoadingCourses } =
+    useCourses();
 
   const {
     register,
@@ -175,53 +173,59 @@ export default function CoursesPage() {
         </Card>
 
         {/* Courses Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCourses.map((course) => (
-            <Card
-              key={course.id}
-              className="border-border/50 hover:border-chart-2/50 transition-colors"
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Badge
-                        variant="outline"
-                        className="bg-chart-2/10 text-chart-2 border-chart-2/20"
-                      >
-                        {course.code}
-                      </Badge>
+        {isLoadingCourses ? (
+          <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+            Loading ...
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredCourses.map((course) => (
+              <Card
+                key={course.id}
+                className="border-border/50 hover:border-chart-2/50 transition-colors"
+              >
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge
+                          variant="outline"
+                          className="bg-chart-2/10 text-chart-2 border-chart-2/20"
+                        >
+                          {course.code}
+                        </Badge>
+                      </div>
+                      <CardTitle className="text-lg">{course.name}</CardTitle>
                     </div>
-                    <CardTitle className="text-lg">{course.name}</CardTitle>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="pt-3 border-t border-border/50 flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 bg-transparent"
-                  >
-                    Edit
-                  </Button>
-                  <Link
-                    href={`/admin/courses/${course.id}`}
-                    className="flex-1 bg-transparent"
-                  >
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="pt-3 border-t border-border/50 flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 bg-transparent w-full"
+                      className="flex-1 bg-transparent"
                     >
-                      View Details
+                      Edit
                     </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                    <Link
+                      href={`/admin/courses/${course.id}`}
+                      className="flex-1 bg-transparent"
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 bg-transparent w-full"
+                      >
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {filteredCourses.length === 0 && (
           <Card className="border-border/50 mt-6">

@@ -15,6 +15,7 @@ import { useAxios } from "@/services/axios/axios.hooks";
 export function LocationManager() {
   const { axios } = useAxios();
   const [buildings, setBuildings] = useState<Building[]>([]);
+  const [isLoadingBuildings, setIsLoadingBuildings] = useState(false);
 
   const [selectedLocation, setSelectedLocation] = useState<{
     lat: number;
@@ -24,8 +25,10 @@ export function LocationManager() {
   } | null>(null);
 
   async function fetchAllBuildings() {
+    setIsLoadingBuildings(true);
     const data = await getAllBuildings(axios);
     setBuildings(data);
+    setIsLoadingBuildings(false);
   }
 
   const handleAddBuilding = async (
@@ -59,7 +62,13 @@ export function LocationManager() {
         />
       </div>
       <div>
-        <BuildingList buildings={buildings} onDelete={handleDeleteBuilding} />
+        {isLoadingBuildings ? (
+          <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+            Loading ...
+          </div>
+        ) : (
+          <BuildingList buildings={buildings} onDelete={handleDeleteBuilding} />
+        )}
       </div>
     </div>
   );
