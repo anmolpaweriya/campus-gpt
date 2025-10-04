@@ -21,18 +21,51 @@ import {
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { StudentNav } from "./partials/student-nav";
-import { mockEvents, mockTimetable } from "@/lib/mock-data";
 import { useSupabaseContext } from "@/providers/supabse.provider";
+import { useEffect, useState } from "react";
+import { useAxios } from "@/services/axios/axios.hooks";
+
+type Lecture = {
+  startTime: string;
+  endTime: string;
+  room: string;
+  subject: {
+    name: string;
+    teacher?: {
+      name?: string;
+    };
+  };
+};
 
 export default function StudentDashboard() {
-  const { user, isLoading } = useSupabaseContext();
+  const { user, isLoading: isUserLoading } = useSupabaseContext();
+  const { axios } = useAxios();
+  const [dashboardData, setDashboardData] = useState<{
+    subjectsCount: number;
+    totalTodayLectures: number;
+    totalWeekLectures: number;
+    todayLectures: Lecture[];
+  } | null>(null);
 
-  const todayClasses = mockTimetable
-    .filter((slot) => slot.day === "Monday")
-    .slice(0, 3);
-  const upcomingEvents = mockEvents.slice(0, 2);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
 
-  if (isLoading) return <>Loading ...</>;
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const res = await axios.get("/dashboard/student"); // Replace with your real API path
+        setDashboardData(res.data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data", error);
+      } finally {
+        setLoadingDashboard(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  if (isUserLoading || loadingDashboard) return <>Loading...</>;
+
   return (
     <div className="min-h-screen bg-background">
       <StudentNav />
@@ -51,79 +84,77 @@ export default function StudentDashboard() {
           </p>
         </div>
 
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 hover:border-primary/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-primary/20 group">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardDescription>Current GPA</CardDescription>
-                <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <TrendingUp className="w-4 h-4 text-primary" />
+                <CardDescription>Total Subjects</CardDescription>
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <BookOpen className="w-4 h-4 text-primary" />
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                3.8
+              <div className="text-4xl font-bold text-primary">
+                {dashboardData?.subjectsCount ?? 0}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                +0.2 from last semester
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-accent/20 bg-gradient-to-br from-card via-card to-accent/5 hover:border-accent/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20 group">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardDescription>Enrolled Courses</CardDescription>
-                <div className="p-2 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                  <BookOpen className="w-4 h-4 text-accent" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-4xl font-bold text-accent">6</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                18 credits this semester
-              </p>
             </CardContent>
           </Card>
 
           <Card className="border-chart-3/20 bg-gradient-to-br from-card via-card to-chart-3/5 hover:border-chart-3/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-chart-3/20 group">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardDescription>Attendance</CardDescription>
-                <div className="p-2 rounded-lg bg-chart-3/10 group-hover:bg-chart-3/20 transition-colors">
+                <CardDescription>Lectures Today</CardDescription>
+                <div className="p-2 rounded-lg bg-chart-3/10">
                   <Calendar className="w-4 h-4 text-chart-3" />
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold text-chart-3">92%</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Above required 75%
-              </p>
+              <div className="text-4xl font-bold text-chart-3">
+                {dashboardData?.totalTodayLectures ?? 0}
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="border-chart-4/20 bg-gradient-to-br from-card via-card to-chart-4/5 hover:border-chart-4/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-chart-4/20 group">
+          <Card className="border-accent/20 bg-gradient-to-br from-card via-card to-accent/5 hover:border-accent/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/20 group">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardDescription>Pending Tasks</CardDescription>
-                <div className="p-2 rounded-lg bg-chart-4/10 group-hover:bg-chart-4/20 transition-colors">
-                  <Clock className="w-4 h-4 text-chart-4" />
+                <CardDescription>Lectures This Week</CardDescription>
+                <div className="p-2 rounded-lg bg-accent/10">
+                  <Clock className="w-4 h-4 text-accent" />
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold text-chart-4">4</div>
+              <div className="text-4xl font-bold text-accent">
+                {dashboardData?.totalWeekLectures ?? 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-muted/20 bg-gradient-to-br from-card via-card to-muted/5 hover:border-muted/40 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-muted/20 group">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardDescription>GPA</CardDescription>
+                <div className="p-2 rounded-lg bg-muted/10">
+                  <TrendingUp className="w-4 h-4 text-muted-foreground" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-4xl font-bold text-muted-foreground">-</div>
               <p className="text-xs text-muted-foreground mt-1">
-                2 due this week
+                Not available
               </p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Schedule and Quick Actions */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Today Schedule */}
           <Card className="lg:col-span-2 border-border/50 bg-gradient-card backdrop-blur-sm hover:border-primary/30 transition-all duration-300">
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -146,44 +177,51 @@ export default function StudentDashboard() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {todayClasses.map((slot, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all duration-300 group"
-                >
-                  <div className="flex-shrink-0 w-20 text-center p-3 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
-                    <div className="text-sm font-bold text-primary">
-                      {slot.time.split(" - ")[0]}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {slot.time.split(" - ")[1]}
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-semibold text-foreground text-lg">
-                        {slot.subject}
-                      </h4>
-                      <Badge
-                        variant="outline"
-                        className="text-xs border-primary/30 text-primary"
-                      >
-                        {slot.type}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {slot.faculty}
-                    </p>
-                    <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                      <MapPin className="w-3 h-3" />
-                      {slot.room}
-                    </div>
-                  </div>
+              {dashboardData?.todayLectures.length === 0 ? (
+                <div className="text-muted-foreground text-sm p-4 border rounded-lg bg-secondary/30">
+                  You have no lectures today — enjoy the day!
                 </div>
-              ))}
+              ) : (
+                dashboardData?.todayLectures.map((slot, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-4 p-4 rounded-xl bg-secondary/30 border border-border/50 hover:border-primary/30 hover:bg-secondary/50 transition-all duration-300 group"
+                  >
+                    <div className="flex-shrink-0 w-20 text-center p-3 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
+                      <div className="text-sm font-bold text-primary">
+                        {slot.startTime}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {slot.endTime}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold text-foreground text-lg">
+                          {slot.subject?.name ?? "Subject"}
+                        </h4>
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-primary/30 text-primary"
+                        >
+                          Lecture
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {slot.subject?.teacher?.name ?? "Faculty"}
+                      </p>
+                      <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                        <MapPin className="w-3 h-3" />
+                        {slot.room}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 
+          {/* Right Column */}
           <div className="space-y-6">
             <Card className="border-border/50 bg-gradient-card backdrop-blur-sm hover:border-accent/30 transition-all duration-300">
               <CardHeader>
@@ -227,40 +265,6 @@ export default function StudentDashboard() {
                     </div>
                   </Button>
                 </Link>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50 bg-gradient-card backdrop-blur-sm hover:border-chart-3/30 transition-all duration-300">
-              <CardHeader>
-                <CardTitle className="text-xl">Upcoming Events</CardTitle>
-                <CardDescription>Don&apos;t miss out</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {upcomingEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="p-4 rounded-xl bg-gradient-to-br from-secondary/30 to-secondary/10 border border-border/50 hover:border-chart-3/30 hover:from-secondary/50 hover:to-secondary/20 transition-all duration-300 group"
-                  >
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="p-2 rounded-lg bg-chart-3/20 group-hover:bg-chart-3/30 transition-colors">
-                        <Calendar className="w-4 h-4 text-chart-3" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-semibold text-sm text-foreground">
-                          {event.title}
-                        </h4>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {event.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground ml-11">
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
-                      <span>•</span>
-                      <span>{event.time}</span>
-                    </div>
-                  </div>
-                ))}
               </CardContent>
             </Card>
           </div>
