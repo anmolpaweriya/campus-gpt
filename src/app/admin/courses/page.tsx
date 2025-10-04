@@ -209,7 +209,13 @@ export default function CoursesPage() {
                     href={`/admin/courses/${course.id}`}
                     className="flex-1 bg-transparent"
                   >
-                    View Details
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 bg-transparent w-full"
+                    >
+                      View Details
+                    </Button>
                   </Link>
                 </div>
               </CardContent>

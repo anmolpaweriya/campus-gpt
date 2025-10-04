@@ -10,6 +10,7 @@ import {
   BookOpen,
   Calendar,
   LogOut,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabse";
@@ -30,6 +31,7 @@ export function AdminNav() {
     { href: "/admin/courses", label: "Courses", icon: BookOpen },
     { href: "/admin/faculty", label: "Faculty", icon: UserCog },
     { href: "/admin/events", label: "Events", icon: Calendar },
+    { href: "/admin/building", label: "Buildings", icon: Building },
   ];
 
   return (
