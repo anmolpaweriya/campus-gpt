@@ -116,7 +116,7 @@ export default function ChatbotPage() {
                         : "bg-secondary/50 text-foreground border-2 border-border/50 hover:border-primary/30",
                     )}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap ">
                       <ReactMarkdown>{message.content}</ReactMarkdown>
                       {message.isStreaming && (
                         <span className="inline-block w-1 h-4 bg-current ml-1 animate-pulse" />

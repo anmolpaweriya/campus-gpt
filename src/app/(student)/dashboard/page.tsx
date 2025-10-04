@@ -208,7 +208,7 @@ export default function StudentDashboard() {
                 <CardTitle className="text-xl">Quick Actions</CardTitle>
                 <CardDescription>Access key features</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 grid gap-4">
                 <Link href="/chatbot">
                   <Button
                     variant="outline"

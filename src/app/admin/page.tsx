@@ -20,14 +20,17 @@ import {
   Calendar,
   Award,
   Sparkles,
+  Building,
 } from "lucide-react";
 import { AdminNav } from "./partials/admin-nav";
+import { useAdminDashboard } from "./admin.provider";
 
 export default function AdminDashboard() {
+  const { dashboardData, isLoadingAdminDashboard } = useAdminDashboard();
   const stats = [
     {
       title: "Total Students",
-      value: mockStudents.length.toString(),
+      value: dashboardData?.totalStudents ?? 0,
       description: "Active enrollments",
       icon: Users,
       gradient: "from-primary to-accent",
@@ -35,30 +38,36 @@ export default function AdminDashboard() {
     },
     {
       title: "Faculty Members",
-      value: mockFaculty.length.toString(),
+      value: dashboardData?.totalFaculty ?? 0,
       description: "Teaching staff",
       icon: UserCog,
       gradient: "from-accent to-chart-3",
       glow: "glow-accent",
     },
     {
-      title: "Active Classes",
-      value: mockClasses.length.toString(),
-      description: "This semester",
+      title: "Total Courses",
+      value: dashboardData?.totalCourses ?? 0,
+      description: "This Year",
       icon: BookOpen,
       gradient: "from-chart-3 to-chart-4",
       glow: "glow-primary",
     },
     {
-      title: "Upcoming Events",
-      value: mockEvents.length.toString(),
-      description: "Scheduled activities",
-      icon: Calendar,
+      title: "Total Buildings",
+      value: dashboardData?.totalBuildings ?? 0,
+      description: "University buildings",
+      icon: Building,
       gradient: "from-chart-4 to-primary",
       glow: "glow-accent",
     },
   ];
 
+  if (isLoadingAdminDashboard)
+    return (
+      <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+        Loading ...
+      </div>
+    );
   return (
     <div className="min-h-screen bg-background">
       <AdminNav />
@@ -122,33 +131,35 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {mockStudents.map((student, index) => (
-                  <div
-                    key={student.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-secondary/30 to-secondary/10 border border-border/50 hover:border-primary/30 hover:from-secondary/50 hover:to-secondary/20 transition-all duration-300 group"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                  >
-                    <div>
-                      <p className="font-semibold text-foreground text-base">
-                        {student.name}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {student.studentId} • {student.department}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center gap-1.5 text-sm font-bold">
-                        <div className="p-1.5 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
-                          <Award className="w-4 h-4 text-primary" />
-                        </div>
-                        <span className="text-primary">{student.gpa}</span>
+                {dashboardData?.recentEnrollments?.map(
+                  (student: any, index: number) => (
+                    <div
+                      key={student.id}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-secondary/30 to-secondary/10 border border-border/50 hover:border-primary/30 hover:from-secondary/50 hover:to-secondary/20 transition-all duration-300 group"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div>
+                        <p className="font-semibold text-foreground text-base">
+                          Student enrolled in {student?.course?.name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {student.id} • {student?.course?.code}
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Year {student.year}
-                      </p>
+                      <div className="text-right">
+                        <div className="flex items-center justify-end w-full  gap-1.5 text-sm font-bold">
+                          <div className="p-1.5 rounded-lg bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                            <Award className="w-4 h-4 text-primary" />
+                          </div>
+                          <span className="text-primary">{student.gpa}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          enrolled at {student.createdAt?.split("T")?.[0]}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </CardContent>
           </Card>
@@ -165,62 +176,28 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">
-                      Computer Science
-                    </span>
-                    <span className="font-bold text-primary">45 students</span>
-                  </div>
-                  <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: "75%" }}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">
-                      Electrical Engineering
-                    </span>
-                    <span className="font-bold text-accent">32 students</span>
-                  </div>
-                  <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-accent to-chart-3 rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: "53%" }}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">
-                      Mechanical Engineering
-                    </span>
-                    <span className="font-bold text-chart-3">28 students</span>
-                  </div>
-                  <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-chart-3 to-chart-4 rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: "47%" }}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground font-medium">
-                      Mathematics
-                    </span>
-                    <span className="font-bold text-chart-4">18 students</span>
-                  </div>
-                  <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-chart-4 to-primary rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: "30%" }}
-                    />
-                  </div>
-                </div>
+                {dashboardData?.departmentOverview
+                  ?.sort((a: any, b: any) => b.studentCount - a.studentCount)
+                  .map((course: any) => (
+                    <div key={course.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-foreground font-medium">
+                          {course.name}
+                        </span>
+                        <span className="font-bold text-primary">
+                          {course.studentCount} students
+                        </span>
+                      </div>
+                      <div className="h-3 bg-secondary/50 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-1000 ease-out"
+                          style={{
+                            width: `${(course.studentCount / 10) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
               </div>
             </CardContent>
           </Card>

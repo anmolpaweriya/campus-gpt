@@ -12,18 +12,54 @@ import { Button } from "@/components/ui/button";
 import { mockEvents } from "@/lib/mock-data";
 import { Search, Calendar, Clock, MapPin, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { AdminNav } from "../partials/admin-nav";
+import { useEventContext } from "./events.provider";
+import { EventFormData, eventSchema } from "./events.types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { createNewEvent } from "./events.api";
 
 export default function EventsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { events, isLoadingEvents, handleCreateEvent, handleDeleteEvent } =
+    useEventContext();
+  const [isPending, startTransition] = useTransition();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const filteredEvents = mockEvents.filter(
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    formState: { errors },
+  } = useForm<EventFormData>({
+    resolver: zodResolver(eventSchema) as any,
+  });
+
+  const onSubmit = (data: EventFormData) => {
+    startTransition(async () => {
+      await handleCreateEvent(data);
+      setTimeout(() => {
+        setIsDialogOpen(false);
+        reset();
+      }, 1000); // Simulate a 1s delay
+    });
+  };
+  const filteredEvents = events.filter(
     (event) =>
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.type.toLowerCase().includes(searchQuery.toLowerCase()),
+      event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      event.description.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getEventTypeColor = (type: string) => {
@@ -41,6 +77,20 @@ export default function EventsPage() {
     }
   };
 
+  function getEventTime(isoDate: string) {
+    const date = new Date(isoDate);
+
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  }
+  if (isLoadingEvents)
+    return (
+      <div className="w-full h-full text-2xl text-gray-400 flex justify-center items-center">
+        Loading ...
+      </div>
+    );
   return (
     <div className="min-h-screen bg-background">
       <AdminNav />
@@ -64,7 +114,104 @@ export default function EventsPage() {
                 />
               </div>
               <Button variant="outline">Filter</Button>
-              <Button>Add Event</Button>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>Add Event</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px] bg-gradient-to-br from-background via-background to-primary/5 border-primary/20">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl bg-gradient-to-r from-primary to-chart-2 bg-clip-text text-transparent">
+                      Add New Event
+                    </DialogTitle>
+                    <DialogDescription>
+                      Enter the event’s details
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {/* ✅ Form */}
+                  <form
+                    onSubmit={handleSubmit(onSubmit)}
+                    className="space-y-4 mt-4"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        placeholder="Dr. John Doe"
+                        {...register("name")}
+                        className="bg-secondary/50"
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-red-500">
+                          {errors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description</Label>
+                      <Input
+                        id="description"
+                        placeholder="some details about the event"
+                        {...register("description")}
+                        className="bg-secondary/50"
+                      />
+                      {errors.description && (
+                        <p className="text-sm text-red-500">
+                          {errors.description.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Timing</Label>
+                      <Input
+                        id="time"
+                        placeholder="Enter the event location"
+                        {...register("time")}
+                        className="bg-secondary/50"
+                        type="datetime-local"
+                      />
+                      {errors.time && (
+                        <p className="text-sm text-red-500">
+                          {errors.time.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Location</Label>
+                      <Input
+                        id="phone"
+                        placeholder="Enter the event location"
+                        {...register("location")}
+                        className="bg-secondary/50"
+                      />
+                      {errors.location && (
+                        <p className="text-sm text-red-500">
+                          {errors.location.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setIsDialogOpen(false);
+                          reset();
+                        }}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" className="flex-1">
+                        Add Event
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +233,7 @@ export default function EventsPage() {
                     {event.type}
                   </Badge>
                 </div>
-                <CardTitle className="text-lg">{event.title}</CardTitle>
+                <CardTitle className="text-lg">{event.name}</CardTitle>
                 <CardDescription className="line-clamp-2">
                   {event.description}
                 </CardDescription>
@@ -96,7 +243,7 @@ export default function EventsPage() {
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span className="text-foreground">
-                      {new Date(event.date).toLocaleDateString("en-US", {
+                      {new Date(event.time).toLocaleDateString("en-US", {
                         weekday: "short",
                         year: "numeric",
                         month: "short",
@@ -106,7 +253,9 @@ export default function EventsPage() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">{event.time}</span>
+                    <span className="text-muted-foreground">
+                      {getEventTime(event.time)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
@@ -117,11 +266,12 @@ export default function EventsPage() {
                 </div>
                 <div className="pt-3 border-t border-border/50 flex gap-2">
                   <Button
-                    variant="outline"
+                    onClick={() => handleDeleteEvent(event.id)}
+                    variant="destructive"
                     size="sm"
-                    className="flex-1 bg-transparent"
+                    className="flex-1 "
                   >
-                    Edit
+                    Delete
                   </Button>
                   <Button
                     variant="outline"

@@ -3,6 +3,7 @@ import { useSupabaseContext } from "@/providers/supabse.provider";
 import { UserRoles } from "@/types/global.types";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
+import { AdminDashboardProvider } from "./admin.provider";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const router = useRouter();
@@ -18,5 +19,5 @@ export default function Layout({ children }: { children: ReactNode }) {
   }, [user, isLoading]);
 
   if (isLoading) return <>Loading ...</>;
-  return <>{children}</>;
+  return <AdminDashboardProvider>{children}</AdminDashboardProvider>;
 }
