@@ -168,6 +168,11 @@ export default function LoginPage() {
               Sign up
             </Link>
           </div>
+          <div className="bg-gray-100 p-2 rounded-2xl">
+            <p>Admin Credentials</p>
+            <p>email: admin@gmail.com</p>
+            <p>password: 1234567890</p>
+          </div>
         </CardFooter>
       </Card>
     </div>
