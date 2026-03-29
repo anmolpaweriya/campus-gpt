@@ -29,6 +29,8 @@ export const SupabaseProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  console.log(user);
+
   useEffect(() => {
     const getSession = async () => {
       const {
